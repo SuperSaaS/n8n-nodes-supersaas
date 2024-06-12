@@ -1,0 +1,14 @@
+node_modules
+.DS_Store
+.tmp
+tmp
+dist
+npm-debug.log*
+yarn.lock
+.vscode/launch.json
+.editorconfig
+.eslintrc.js
+.eslintrc.prepublish.js
+.npmignore
+.prettierrc.js
+.vscode

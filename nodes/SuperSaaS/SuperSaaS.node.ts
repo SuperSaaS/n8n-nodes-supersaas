@@ -126,7 +126,7 @@ export class SuperSaaS implements INodeType {
 				const credentials = await this.getCredentials('superSaaSApi');
 				const event = this.getNodeParameter('event', 0) as string;
 
-				if (!credentials || !credentials.password || !credentials.account || !credentials.account_id) {
+				if (!credentials || !credentials.password || !credentials.account) {
 					throw new NodeOperationError(this.getNode(), "Invalid credentials.");
 				}
 

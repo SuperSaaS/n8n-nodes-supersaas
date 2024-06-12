@@ -7,7 +7,6 @@ This is an n8n community node. It lets you use SuperSaaS webhooks in your n8n wo
 [Installation](#installation)  
 [Operations](#operations)  
 [Credentials](#credentials)  <!-- delete if no auth needed -->  
-[Compatibility](#compatibility)  
 [Usage](#usage)  <!-- delete if not using this section -->  
 [Resources](#resources)  
 [Version history](#version-history)  <!-- delete if not using this section -->  
@@ -45,6 +44,6 @@ You can use the build bash command to build locally. You can check more informat
 
 ## Version history
 
-Version 1.0
+Version 0.1.1
 
 

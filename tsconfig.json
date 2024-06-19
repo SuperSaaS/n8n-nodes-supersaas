@@ -20,7 +20,6 @@
 		"sourceMap": true,
 		"skipLibCheck": true,
 		"outDir": "./dist/",
-		"types": ["node"],
 	},
 	"include": [
 		"credentials/**/*",

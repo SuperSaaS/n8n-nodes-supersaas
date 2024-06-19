@@ -4,11 +4,10 @@ import {
 	INodeExecutionData,
 	INodePropertyOptions,
 	INodeType,
-	NodeOperationError,
 	INodeTypeDescription,
+	NodeOperationError,
 } from 'n8n-workflow';
 
-//const DEBUG = false
 const BASE_URL = 'https://www.supersaas.com';
 
 export class SuperSaaS implements INodeType {
@@ -32,9 +31,6 @@ export class SuperSaaS implements INodeType {
 				required: true,
 			},
 		],
-		requestDefaults: {
-			baseURL: 'https://www.supersaas.com',
-		},
 		properties: [
 			{
 				displayName: 'WebhookURL',
@@ -55,7 +51,7 @@ export class SuperSaaS implements INodeType {
 				description: 'Your webhook name',
 			},
 			{
-				displayName: 'Event',
+				displayName: 'Event (Gets Parent ID)',
 				name: 'event',
 				type: 'options',
 				options: [
@@ -123,27 +119,22 @@ export class SuperSaaS implements INodeType {
 	methods = {
 		loadOptions: {
 			async getSchedules(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const credentials = await this.getCredentials('superSaaSApi');
 				const event = this.getNodeParameter('event', 0) as string;
-
-				if (!credentials || !credentials.password || !credentials.account) {
-					throw new NodeOperationError(this.getNode(), "Invalid credentials.");
-				}
-
-				let options: INodePropertyOptions[] = []
+				let optionsRet: INodePropertyOptions[] = []
 
 				if (event === 'U' || event === 'M' || event === 'H' || event === 'P') {
-
-					options.push({
+					optionsRet.push({
 						name: "Account",
-						value: credentials.account as string,
+						value: ""
 					})
-
 				} else if (event === 'N' || event === 'C' || event === 'R' || event === 'F') {
-					let url = `${BASE_URL}/api/schedules.json?password=${credentials.password}&account=${credentials.account}`
+					const credentials = await this.getCredentials('superSaaSApi');
+					if (!credentials || !credentials.api_key || !credentials.account) {
+						throw new NodeOperationError(this.getNode(), "Invalid credentials.");
+					}
 
 					let responseData = await this.helpers.request({
-						url: url,
+						url: BASE_URL + '/api/schedules.json?account=' + credentials.account + '&api_key=' + credentials.api_key,
 						method: 'GET',
 						headers: {
 							'Accept': 'application/json',
@@ -151,12 +142,11 @@ export class SuperSaaS implements INodeType {
 						},
 					});
 
-
 					let responseJSON = JSON.parse(responseData)
 					for (const item of responseJSON) {
 						const itemName = item["name"] as string;
 						const itemID = item["id"] as string;
-						options.push({
+						optionsRet.push({
 							name: "Schedule: " + itemName,
 							value: itemID,
 						}
@@ -164,10 +154,13 @@ export class SuperSaaS implements INodeType {
 
 				} else if (event === 'S' || event === 'O') {
 
-					let url = `${BASE_URL}/api/super_forms.json?password=${credentials.password}&account=${credentials.account}`
+					const credentials = await this.getCredentials('superSaaSApi');
+					if (!credentials || !credentials.api_key || !credentials.account) {
+						throw new NodeOperationError(this.getNode(), "Invalid credentials.");
+					}
 
 					let responseData = await this.helpers.request({
-						url: url,
+						url: BASE_URL + '/api/super_forms.json?account=' + credentials.account + '&api_key=' + credentials.api_key,
 						method: 'GET',
 						headers: {
 							'Accept': 'application/json',
@@ -179,16 +172,14 @@ export class SuperSaaS implements INodeType {
 					for (const item of responseJSON) {
 						const itemName = item["name"] as string;
 						const itemID = item["id"] as string;
-						options.push({
+						optionsRet.push({
 							name: "Form: " + itemName,
 							value: itemID,
 						}
 					);}
-				} else {
-					console.log("EVENT EITHER SUPERFORMS or SCHEDULE")
 				}
 
-				return options;
+				return optionsRet;
 			},
 		}
 	};
@@ -203,15 +194,12 @@ export class SuperSaaS implements INodeType {
 			const parentId = this.getNodeParameter('schedule', 0) as string;
 			const event = this.getNodeParameter('event', 0) as string;
 			const credentials = await this.getCredentials('superSaaSApi');
-			console.log(targetBase, targetEnd, parentId, event)
-
-			if (!credentials || !credentials.password || !credentials.account) {
+			if (!credentials || !credentials.api_key || !credentials.account) {
 				throw new NodeOperationError(this.getNode(), "Invalid credentials.");
 			}
-			let url = `${BASE_URL}/api/hooks?password=${credentials.password}&account=${credentials.account}`
 
 			let responseData = await this.helpers.request({
-				url: url,
+				url: BASE_URL + '/api/hooks?account=' + credentials.account + '&api_key=' + credentials.api_key,
 				method: 'POST',
 				headers: {
 					'Accept': 'application/json',
@@ -226,6 +214,8 @@ export class SuperSaaS implements INodeType {
 
 			if (responseData){
 				return [this.helpers.returnJsonArray({json: {status: 'OK',},}),];
+			} else {
+				[this.helpers.returnJsonArray({json: {error: 'Error occured',},}),];
 			}
 		}
 

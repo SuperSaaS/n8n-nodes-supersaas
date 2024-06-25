@@ -14,6 +14,7 @@ This is an n8n community node. It lets you use SuperSaaS webhooks in your n8n wo
 ## Installation
 
 Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n community nodes documentation. You can go to the settings and from there install community nodes.
+Just search for n8n-nodes-supersaas in the community node section found under settings.
 
 ## Operations
 

@@ -2,9 +2,7 @@
 	"node": "n8n-nodes-base.SuperSaaSTrigger",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
-	"categories": [
-		"Miscellaneous"
-	],
+	"categories": ["Productivity", "Utility"],
 	"resources": {
 		"credentialDocumentation": [
 			{

@@ -35,7 +35,7 @@ If you don't have forms then the Parent ID list will be empty.
 ## Testing locally
 
 You can use the build bash command to build locally. You can check more information on how to [hosting n8n](https://docs.n8n.io/hosting/).
-NOTE: localhost:5678 does not work as an URL for SuperSaaS.
+NOTE: localhost:5678 does not work as an URL for SuperSaaS webhook and will fail with 400.
 
 ## Resources
 

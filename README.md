@@ -1,6 +1,6 @@
 # n8n-nodes-supersaas
 
-This is an n8n community node. It lets you use SuperSaaS webhooks in your n8n workflows. It creates configures webhooks in the SuperSaaS backend then you can receive information.
+This is an n8n community node. It lets you use SuperSaaS webhooks in your n8n workflows. It creates webhooks in the SuperSaaS backend, and then you can receive information you desire.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
@@ -25,13 +25,12 @@ Use your account name, and API key [from SuperSaaS dashboard](https://www.supers
 
 ## Usage
 
-After the credentials are set for self hosted n8n installation and setup is beyond the scope of this tutorial, but you could try out [ngrok](https://ngrok.com) for testing.
+The setup of self hosted n8n is beyond the scope of this tutorial, but you could try out [ngrok](https://ngrok.com) for testing.
 
-Now you can set which kind of event you wish to receive notifications about. The module will fetch and populate the Parent ID drop down menu. The different types of events are tied to either your account, schedule or a form check [webhooks](https://www.supersaas.com/info/dev/webhooks).
+Now you can set which kind of event you wish to receive notifications about. The module will fetch and populate the Parent ID drop down menu.
+The different types of events are tied to either your account, schedule or a form check [webhooks](https://www.supersaas.com/info/dev/webhooks).
 
 If you don't have forms then the Parent ID list will be empty.
-
-Once you have checked all the necessary information is correct, you can press Test Step, and if successful it will say OK. You can also check on your SuperSaaS dashboard that a webhook has been created.
 
 ## Testing locally
 

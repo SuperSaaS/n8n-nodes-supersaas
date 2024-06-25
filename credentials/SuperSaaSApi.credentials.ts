@@ -24,8 +24,8 @@ export class SuperSaaSApi implements ICredentialType {
 	];
 	test: ICredentialTestRequest = {
 		request: {
-				baseURL: 'https://www.supersaas.com',
-				url: '/api/ping',
+			baseURL: 'https://www.supersaas.com',
+			url: '/api/ping',
 				method: 'GET',
 				qs: {
 					account: '={{$credentials.account}}',

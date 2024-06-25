@@ -12,3 +12,4 @@ yarn.lock
 .npmignore
 .prettierrc.js
 .vscode
+.idea

@@ -1,5 +1,5 @@
 {
-	"node": "n8n-nodes-base.SuperSaaS",
+	"node": "n8n-nodes-base.SuperSaaSTrigger",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": [

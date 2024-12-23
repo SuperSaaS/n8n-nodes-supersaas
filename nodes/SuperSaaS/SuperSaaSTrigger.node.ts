@@ -11,10 +11,6 @@ import {
 import { NodeConnectionType } from 'n8n-workflow';
 import {getAccount, superSaaSApiRequest} from './GenericFunctions';
 
-
-// const NGROK = "" // set this and ngrok if you want to test
-
-
 export class SuperSaaSTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'SuperSaaS Trigger',
@@ -202,9 +198,9 @@ export class SuperSaaSTrigger implements INodeType {
 					}
 					return true;
 				} catch (error) {
-					console.error('Failed to create webhook:', {
+					console.error('Failed to create webhook, check API key:', {
 						error,
-						credentials: await this.getCredentials('superSaaSApi'),
+						account: (await this.getCredentials('superSaaSApi')).account,
 						params: {
 							webhookUrl,
 							event,

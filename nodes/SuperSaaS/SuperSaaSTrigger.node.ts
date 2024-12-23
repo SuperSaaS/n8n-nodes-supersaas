@@ -3,10 +3,12 @@ import {
 	ILoadOptionsFunctions,
 	INodePropertyOptions,
 	INodeType,
-	INodeTypeDescription, IWebhookFunctions, IWebhookResponseData,
-
+	INodeTypeDescription,
+	IWebhookFunctions,
+	IWebhookResponseData,
+	NodeOperationError,
 } from 'n8n-workflow';
-
+import { NodeConnectionType } from 'n8n-workflow';
 import {getAccount, superSaaSApiRequest} from './GenericFunctions';
 
 export class SuperSaaSTrigger implements INodeType {
@@ -22,7 +24,7 @@ export class SuperSaaSTrigger implements INodeType {
 			name: 'SuperSaaS Trigger',
 		},
 		inputs: [],
-		outputs: ['main'],
+		outputs: [NodeConnectionType.Main],
 		credentials: [
 			{
 				name: 'superSaaSApi',
@@ -39,7 +41,7 @@ export class SuperSaaSTrigger implements INodeType {
 		],
 		properties: [
 			{
-				displayName: 'Event (Gets Parent ID)',
+				displayName: 'Event (gets parent ID)',
 				name: 'events',
 				type: 'options',
 				options: [
@@ -89,17 +91,17 @@ export class SuperSaaSTrigger implements INodeType {
 				required: true,
 			},
 			{
-				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
+
 				displayName: 'Parent ID',
 				name: 'schedule',
 				type: 'options',
-				// eslint-disable-next-line n8n-nodes-base/node-param-default-wrong-for-options
+
 				default: [],
 				typeOptions: {
 					loadOptionsDependsOn: ['events'],
 					loadOptionsMethod: 'getSchedules',
 				},
-				// eslint-disable-next-line n8n-nodes-base/node-param-description-wrong-for-dynamic-options
+
 				description: 'Account, Schedule, FormID',
 			},
 		],
@@ -163,20 +165,50 @@ export class SuperSaaSTrigger implements INodeType {
 				return false;
 			},
 			async create(this: IHookFunctions): Promise<boolean> {
-				const webhookUrl: string | undefined = this.getNodeWebhookUrl('default');
+				const webhookUrl = this.getNodeWebhookUrl('default');
 				const event = this.getNodeParameter('events') as string;
-				const parentID = this.getNodeParameter('schedule') as string;
-				const webhookData = this.getWorkflowStaticData('node');
-				let responseData = await superSaaSApiRequest.call(this, 'POST', '/api/hooks', parentID, event, webhookUrl);
-				let responseJSON = JSON.parse(responseData)
+				const parentId = this.getNodeParameter('schedule') as string;
 
-				if (!responseJSON || responseJSON.id === undefined || responseJSON.parent_id === undefined) {
-					return false;
+				// Validate parent ID
+				if (!parentId) {
+					throw new NodeOperationError(this.getNode(), 'Parent ID is required');
 				}
 
-				webhookData.webhookID = responseJSON.id;
-				webhookData.webhookParentID = responseJSON.parent_id;
-				return true;
+				try {
+					console.log('Creating webhook with:', {
+						webhookUrl,
+						event,
+						parentId,
+						account: (await this.getCredentials('superSaaSApi')).account,
+					});
+
+					const responseData = await superSaaSApiRequest.call(
+						this,
+						'POST',
+						'/api/hooks',
+						parentId,
+						event,
+						webhookUrl
+					);
+
+					const response = typeof responseData === 'string' ? JSON.parse(responseData) : responseData;
+
+					if (!response || !response.id) {
+						throw new Error('Invalid response from webhook creation');
+					}
+					return true;
+				} catch (error) {
+					console.error('Failed to create webhook, check API key:', {
+						error,
+						account: (await this.getCredentials('superSaaSApi')).account,
+						params: {
+							webhookUrl,
+							event,
+							parentId,
+						}
+					});
+					throw error;
+				}
 			},
 			async delete(this: IHookFunctions): Promise<boolean> {
 				const webhookData = this.getWorkflowStaticData('node');

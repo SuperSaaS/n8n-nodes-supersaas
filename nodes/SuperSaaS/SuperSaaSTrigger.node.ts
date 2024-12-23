@@ -169,9 +169,7 @@ export class SuperSaaSTrigger implements INodeType {
 				return false;
 			},
 			async create(this: IHookFunctions): Promise<boolean> {
-				let webhookUrl = this.getNodeWebhookUrl('default');
-
-
+				const webhookUrl = this.getNodeWebhookUrl('default');
 				const event = this.getNodeParameter('events') as string;
 				const parentId = this.getNodeParameter('schedule') as string;
 
@@ -179,18 +177,6 @@ export class SuperSaaSTrigger implements INodeType {
 				if (!parentId) {
 					throw new NodeOperationError(this.getNode(), 'Parent ID is required');
 				}
-
-				const webhookData = this.getWorkflowStaticData('node');
-
-				const NGROK = "https://8bf8-81-59-3-222.ngrok-free.app"
-
-				//webhookUrl = NGROK
-
-				webhookUrl = (webhookUrl as String).replace(
-					'http://localhost:5678',
-					NGROK
-			);
-
 
 				try {
 					console.log('Creating webhook with:', {
@@ -214,9 +200,6 @@ export class SuperSaaSTrigger implements INodeType {
 					if (!response || !response.id) {
 						throw new Error('Invalid response from webhook creation');
 					}
-
-					webhookData.webhookID = response.id;
-					webhookData.webhookParentID = parentId;
 					return true;
 				} catch (error) {
 					console.error('Failed to create webhook:', {

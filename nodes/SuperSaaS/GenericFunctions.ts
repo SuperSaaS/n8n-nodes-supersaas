@@ -17,10 +17,10 @@ export async function getAccount(this: IHookFunctions | IExecuteFunctions | ILoa
 }
 
 interface RequestBody {
-  parent_id: string;
-  event?: string | null;
-  target_url?: string | null;
-  id?: string | null;
+	parent_id: string;
+	event?: string | null;
+	target_url?: string | null;
+	id?: string | null;
 }
 
 export async function superSaaSApiRequest(
@@ -41,11 +41,11 @@ export async function superSaaSApiRequest(
 	let body: RequestBody | null = null;
 
 	if (method === 'POST' && parentId) {
-    body = {
-      parent_id: parentId,
+		body = {
+			parent_id: parentId,
 			event,
-      target_url
-    };
+			target_url
+		};
   } else if (method === 'DELETE' && endpoint === '/api/hooks' && id) {
     body = {
       parent_id: parentId as string,
@@ -54,23 +54,23 @@ export async function superSaaSApiRequest(
   }
 
 	try {
-    const response = await this.helpers.request({
-      url: `https://www.supersaas.com${endpoint}?account=${credentials.account}&api_key=${credentials.api_key}`,
-      method,
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body,
-    });
+		const response = await this.helpers.request({
+			url: `https://www.supersaas.com${endpoint}?account=${credentials.account}&api_key=${credentials.api_key}`,
+			method,
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+			},
+			body,
+		});
 
-    return response;
-  } catch (error) {
+		return response;
+	} catch (error) {
 		console.error('API Error:', {
-      status: error.response?.status,
-      data: error.response?.data,
-      body: body,
-    });
-    throw new NodeApiError(this.getNode(), error as JsonObject);
-  }
+			status: error.response?.status,
+			data: error.response?.data,
+			body: body,
+		});
+		throw new NodeApiError(this.getNode(), error as JsonObject);
+	}
 }

@@ -38,6 +38,8 @@ If you don't have forms then the Parent ID list will be empty.
 You can use the build bash command to build locally. You can check more information on how to [hosting n8n](https://docs.n8n.io/hosting/).
 NOTE: localhost:5678 does not work as an URL for SuperSaaS webhook and will fail with 400.
 
+You can in the credentials add a tunnel such as ngrok, but it needs to run in port 5678, add the url of the tunnel to your local n8n in that field, if not testing leave empty.
+
 ## Resources
 
 * [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
@@ -45,4 +47,4 @@ NOTE: localhost:5678 does not work as an URL for SuperSaaS webhook and will fail
 
 ## Version history
 
-Version 0.1.6
+Version 0.1.8

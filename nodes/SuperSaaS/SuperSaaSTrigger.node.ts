@@ -165,7 +165,7 @@ export class SuperSaaSTrigger implements INodeType {
 				return false;
 			},
 			async create(this: IHookFunctions): Promise<boolean> {
-				const webhookUrl = this.getNodeWebhookUrl('default');
+				var webhookUrl = this.getNodeWebhookUrl('default');
 				const event = this.getNodeParameter('events') as string;
 				const parentId = this.getNodeParameter('schedule') as string;
 
@@ -175,11 +175,17 @@ export class SuperSaaSTrigger implements INodeType {
 				}
 
 				try {
+					const creds = await this.getCredentials('superSaaSApi')
+
+					if (creds.ngrok && (creds.ngrok as string).length > 0){
+						webhookUrl = webhookUrl?.replace("http://localhost:5678", creds.ngrok as string)
+					}
+
 					console.log('Creating webhook with:', {
 						webhookUrl,
 						event,
 						parentId,
-						account: (await this.getCredentials('superSaaSApi')).account,
+						account: creds.account,
 					});
 
 					const responseData = await superSaaSApiRequest.call(

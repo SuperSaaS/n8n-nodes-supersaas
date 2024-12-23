@@ -45,4 +45,4 @@ NOTE: localhost:5678 does not work as an URL for SuperSaaS webhook and will fail
 
 ## Version history
 
-Version 0.1.4
+Version 0.1.5

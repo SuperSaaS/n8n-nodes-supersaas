@@ -3,11 +3,17 @@ import {
 	ILoadOptionsFunctions,
 	INodePropertyOptions,
 	INodeType,
-	INodeTypeDescription, IWebhookFunctions, IWebhookResponseData,
-
+	INodeTypeDescription,
+	IWebhookFunctions,
+	IWebhookResponseData,
+	NodeOperationError,
 } from 'n8n-workflow';
-
+import { NodeConnectionType } from 'n8n-workflow';
 import {getAccount, superSaaSApiRequest} from './GenericFunctions';
+
+
+// const NGROK = "" // set this and ngrok if you want to test
+
 
 export class SuperSaaSTrigger implements INodeType {
 	description: INodeTypeDescription = {
@@ -22,7 +28,7 @@ export class SuperSaaSTrigger implements INodeType {
 			name: 'SuperSaaS Trigger',
 		},
 		inputs: [],
-		outputs: ['main'],
+		outputs: [NodeConnectionType.Main],
 		credentials: [
 			{
 				name: 'superSaaSApi',
@@ -39,7 +45,7 @@ export class SuperSaaSTrigger implements INodeType {
 		],
 		properties: [
 			{
-				displayName: 'Event (Gets Parent ID)',
+				displayName: 'Event (gets parent ID)',
 				name: 'events',
 				type: 'options',
 				options: [
@@ -89,17 +95,17 @@ export class SuperSaaSTrigger implements INodeType {
 				required: true,
 			},
 			{
-				// eslint-disable-next-line n8n-nodes-base/node-param-display-name-wrong-for-dynamic-options
+
 				displayName: 'Parent ID',
 				name: 'schedule',
 				type: 'options',
-				// eslint-disable-next-line n8n-nodes-base/node-param-default-wrong-for-options
+
 				default: [],
 				typeOptions: {
 					loadOptionsDependsOn: ['events'],
 					loadOptionsMethod: 'getSchedules',
 				},
-				// eslint-disable-next-line n8n-nodes-base/node-param-description-wrong-for-dynamic-options
+
 				description: 'Account, Schedule, FormID',
 			},
 		],
@@ -163,20 +169,67 @@ export class SuperSaaSTrigger implements INodeType {
 				return false;
 			},
 			async create(this: IHookFunctions): Promise<boolean> {
-				const webhookUrl: string | undefined = this.getNodeWebhookUrl('default');
-				const event = this.getNodeParameter('events') as string;
-				const parentID = this.getNodeParameter('schedule') as string;
-				const webhookData = this.getWorkflowStaticData('node');
-				let responseData = await superSaaSApiRequest.call(this, 'POST', '/api/hooks', parentID, event, webhookUrl);
-				let responseJSON = JSON.parse(responseData)
+				let webhookUrl = this.getNodeWebhookUrl('default');
 
-				if (!responseJSON || responseJSON.id === undefined || responseJSON.parent_id === undefined) {
-					return false;
+
+				const event = this.getNodeParameter('events') as string;
+				const parentId = this.getNodeParameter('schedule') as string;
+
+				// Validate parent ID
+				if (!parentId) {
+					throw new NodeOperationError(this.getNode(), 'Parent ID is required');
 				}
 
-				webhookData.webhookID = responseJSON.id;
-				webhookData.webhookParentID = responseJSON.parent_id;
-				return true;
+				const webhookData = this.getWorkflowStaticData('node');
+
+				const NGROK = "https://8bf8-81-59-3-222.ngrok-free.app"
+
+				//webhookUrl = NGROK
+
+				webhookUrl = (webhookUrl as String).replace(
+					'http://localhost:5678',
+					NGROK
+			);
+
+
+				try {
+					console.log('Creating webhook with:', {
+						webhookUrl,
+						event,
+						parentId,
+						account: (await this.getCredentials('superSaaSApi')).account,
+					});
+
+					const responseData = await superSaaSApiRequest.call(
+						this,
+						'POST',
+						'/api/hooks',
+						parentId,
+						event,
+						webhookUrl
+					);
+
+					const response = typeof responseData === 'string' ? JSON.parse(responseData) : responseData;
+
+					if (!response || !response.id) {
+						throw new Error('Invalid response from webhook creation');
+					}
+
+					webhookData.webhookID = response.id;
+					webhookData.webhookParentID = parentId;
+					return true;
+				} catch (error) {
+					console.error('Failed to create webhook:', {
+						error,
+						credentials: await this.getCredentials('superSaaSApi'),
+						params: {
+							webhookUrl,
+							event,
+							parentId,
+						}
+					});
+					throw error;
+				}
 			},
 			async delete(this: IHookFunctions): Promise<boolean> {
 				const webhookData = this.getWorkflowStaticData('node');

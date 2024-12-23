@@ -20,6 +20,12 @@ export class SuperSaaSApi implements ICredentialType {
 			type: 'string',
 			typeOptions: { password: true },
 			default: '',
+		},
+		{
+			displayName: 'Testing tunnel (ngrok...)',
+			name: 'ngrok',
+			type: 'string',
+			default: '',
 		}
 	];
 	test: ICredentialTestRequest = {

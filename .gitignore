@@ -13,3 +13,4 @@ yarn.lock
 .prettierrc.js
 .vscode
 .idea
+package_check

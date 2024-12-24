@@ -47,4 +47,4 @@ You can in the credentials add a tunnel such as ngrok, but it needs to run in po
 
 ## Version history
 
-Version 0.1.8
+Version 0.1.9

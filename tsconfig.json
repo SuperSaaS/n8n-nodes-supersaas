@@ -24,12 +24,14 @@
 		"declaration": true,
 		"sourceMap": true,
 		"skipLibCheck": true,
-		"outDir": "./dist/"
+		"outDir": "./dist/",
+		"rootDir": "./",
 	},
 	"include": [
 		"credentials/**/*",
 		"nodes/**/*",
 		"nodes/**/*.json",
 		"package.json",
+		"index.ts"
 	],
 }

@@ -6,6 +6,8 @@ import type {
 	IHttpRequestMethods,
 } from 'n8n-workflow';
 import { NodeApiError, NodeOperationError } from 'n8n-workflow';
+import type { AxiosError } from 'axios';
+
 
 export async function getAccount(this: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,): Promise<string> {
 	const credentials = await this.getCredentials('superSaaSApi');
@@ -66,11 +68,15 @@ export async function superSaaSApiRequest(
 
 		return response;
 	} catch (error) {
-		console.error('API Error:', {
-			status: error.response?.status,
-			data: error.response?.data,
-			body: body,
-		});
+		if (error && typeof error === 'object' && 'response' in error) {
+			const axiosError = error as AxiosError;
+
+			console.error('API Error:', {
+				status: axiosError.response?.status,
+				data: axiosError.response?.data,
+				body: body,
+			});
+		}
 		throw new NodeApiError(this.getNode(), error as JsonObject);
 	}
 }

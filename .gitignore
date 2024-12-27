@@ -14,3 +14,8 @@ yarn.lock
 .vscode
 .idea
 package_check
+deprecated/
+
+credentials/SuperSaaSApi.credentials.js
+credentials/SuperSaaSApi.credentials.js.map
+tsconfig.tsbuildinfo

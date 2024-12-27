@@ -16,8 +16,10 @@ export default [
       },
     },
     ignores: [
-      "**/node_modules/**",
-      "**/dist/**",
+			"**/node_modules/**",
+			"**/dist/**",
+			"**/*.json",
+			"**/*.node.json"
     ],
     plugins: {
       "@typescript-eslint": tsPlugin,
@@ -25,14 +27,6 @@ export default [
     },
     rules: {
       // Add base rules or overrides here
-    },
-  },
-  {
-    // Configuration specifically for package.json
-    files: ["package.json"],
-    rules: {
-      // Add rules specific to package.json here
-      "n8n-nodes-base/community-package-json-name-still-default": "off",
     },
   },
   {

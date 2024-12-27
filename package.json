@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-supersaas",
-  "version": "0.1.9",
+  "version": "0.1.15",
   "description": "n8n node to create webhook in SuperSaaS",
   "keywords": [
     "n8n-community-node-package",
@@ -16,21 +16,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/SuperSaaS/n8n-nodes-supersaas.git"
+    "url": "git+https://github.com/SuperSaaS/n8n-nodes-supersaas.git"
   },
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
     "format": "prettier nodes credentials --write",
-    "lint": "eslint nodes/**/*.ts nodes/**/*.json package.json",
-    "lintfix": "eslint nodes/**/*.ts nodes/**/*.json package.json --fix",
-    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
+    "lint": "eslint nodes/**/*.ts credentials/**/*.ts",
+    "lintfix": "eslint nodes/**/*.ts credentials/**/*.ts --fix",
+    "prepublishOnly": "npm run build && npm run lint"
   },
   "files": [
-    "dist",
-    "nodes",
-    "credentials"
+    "dist"
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
@@ -38,7 +36,7 @@
       "dist/credentials/SuperSaaSApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/SuperSaaS/SuperSaaS.node.js"
+      "dist/nodes/SuperSaaS/SuperSaaSTrigger.node.js"
     ]
   },
   "devDependencies": {
@@ -46,7 +44,6 @@
     "@eslint/js": "^9.17.0",
     "@typescript-eslint/eslint-plugin": "^8.18.1",
     "@typescript-eslint/parser": "^8.18.1",
-    "eslint": "^9.17.0",
     "eslint-plugin-n8n-nodes-base": "^1.16.3",
     "globals": "^15.14.0",
     "gulp": "^5.0.0",
@@ -67,5 +64,10 @@
     "npm-debug.log*",
     "yarn.lock",
     ".vscode/launch.json"
-  ]
+  ],
+  "dependencies": {
+    "@eslint/config-array": "^0.19.1",
+    "@eslint/object-schema": "^2.1.5",
+    "eslint": "^9.17.0"
+  }
 }

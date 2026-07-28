@@ -25,7 +25,9 @@
     "format": "prettier nodes credentials --write",
     "lint": "eslint nodes/**/*.ts credentials/**/*.ts",
     "lintfix": "eslint nodes/**/*.ts credentials/**/*.ts --fix",
-    "prepublishOnly": "npm run build && npm run lint"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm run lint && npm test"
   },
   "files": [
     "dist"
@@ -52,7 +54,8 @@
     "n8n-workflow": "^1.7.0",
     "prettier": "^3.4.2",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.65.0"
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^4.1.10"
   },
   "peerDependencies": {
     "n8n-workflow": "*"

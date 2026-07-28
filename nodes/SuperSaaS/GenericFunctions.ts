@@ -8,6 +8,7 @@ import type {
 import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 import type { AxiosError } from 'axios';
 
+const LOCAL_WEBHOOK_ORIGIN = 'http://localhost:5678';
 
 export async function getAccount(this: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,): Promise<string> {
 	const credentials = await this.getCredentials('superSaaSApi');
@@ -16,6 +17,21 @@ export async function getAccount(this: IHookFunctions | IExecuteFunctions | ILoa
 	}
 
 	return credentials.account as string
+}
+
+// The URL registered at SuperSaaS, which is what both create and checkExists must
+// compare against. Without the tunnel substitution here checkExists never matches
+// the hook create registered, and every activation adds another one.
+export async function getRegisteredWebhookUrl(this: IHookFunctions): Promise<string | undefined> {
+	const webhookUrl = this.getNodeWebhookUrl('default');
+	const credentials = await this.getCredentials('superSaaSApi');
+	const tunnel = credentials?.ngrok as string | undefined;
+
+	if (tunnel && tunnel.length > 0) {
+		return webhookUrl?.replace(LOCAL_WEBHOOK_ORIGIN, tunnel);
+	}
+
+	return webhookUrl;
 }
 
 interface RequestBody {

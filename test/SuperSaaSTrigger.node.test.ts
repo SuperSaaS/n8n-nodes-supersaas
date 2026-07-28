@@ -90,6 +90,33 @@ describe('loadOptions.getSchedules', () => {
 		);
 	});
 
+	// The API returns numeric ids. These become the stored value of the 'schedule'
+	// parameter, which checkExists later compares against, so they have to be
+	// converted rather than just cast — `as string` leaves a number at runtime.
+	it('converts numeric schedule ids to strings', async () => {
+		const ctx = createContext({
+			parameters: { events: 'N' },
+			request: vi.fn().mockResolvedValue(JSON.stringify([{ id: 1, name: 'Tennis court' }])),
+		});
+
+		const options = await getSchedules.call(ctx as any);
+
+		expect(options).toEqual([{ name: 'Schedule: Tennis court', value: '1' }]);
+		expect(typeof options[0].value).toBe('string');
+	});
+
+	it('converts numeric form ids to strings', async () => {
+		const ctx = createContext({
+			parameters: { events: 'S' },
+			request: vi.fn().mockResolvedValue(JSON.stringify([{ id: 7, name: 'Signup' }])),
+		});
+
+		const options = await getSchedules.call(ctx as any);
+
+		expect(options).toEqual([{ name: 'Form: Signup', value: '7' }]);
+		expect(typeof options[0].value).toBe('string');
+	});
+
 	it('returns no options for an unknown event code', async () => {
 		const ctx = createContext({ parameters: { events: 'Z' } });
 
@@ -147,6 +174,50 @@ describe('webhookMethods.default.checkExists', () => {
 
 		await expect(checkExists.call(ctx as any)).resolves.toBe(false);
 	});
+
+	// The API returns parent_id as a number; the node parameter holds a string. A
+	// strict comparison of the two never matches, so every activation used to
+	// register another copy of the same hook.
+	it('matches a hook whose parent_id came back as a number', async () => {
+		const ctx = createContext({
+			parameters,
+			webhookUrl,
+			request: vi
+				.fn()
+				.mockResolvedValue(JSON.stringify([{ url: webhookUrl, trigger: 'N', parent_id: 42 }])),
+		});
+
+		await expect(checkExists.call(ctx as any)).resolves.toBe(true);
+	});
+
+	it('still rejects a genuinely different numeric parent', async () => {
+		const ctx = createContext({
+			parameters,
+			webhookUrl,
+			request: vi
+				.fn()
+				.mockResolvedValue(JSON.stringify([{ url: webhookUrl, trigger: 'N', parent_id: 99 }])),
+		});
+
+		await expect(checkExists.call(ctx as any)).resolves.toBe(false);
+	});
+
+	// create registers the tunnel URL, so checkExists has to look for that same URL
+	// rather than the raw localhost one.
+	it('looks for the tunnel URL when ngrok is configured', async () => {
+		const ctx = createContext({
+			credentials: { account: 'acme', api_key: 'secret-key', ngrok: 'https://abc123.ngrok.io' },
+			parameters,
+			webhookUrl: 'http://localhost:5678/webhook/abc',
+			request: vi.fn().mockResolvedValue(
+				JSON.stringify([
+					{ url: 'https://abc123.ngrok.io/webhook/abc', trigger: 'N', parent_id: '42' },
+				]),
+			),
+		});
+
+		await expect(checkExists.call(ctx as any)).resolves.toBe(true);
+	});
 });
 
 describe('webhookMethods.default.create', () => {
@@ -190,6 +261,41 @@ describe('webhookMethods.default.create', () => {
 
 		await expect(create.call(ctx as any)).rejects.toThrow(NodeOperationError);
 		expect(ctx.helpers.request).not.toHaveBeenCalled();
+	});
+
+	// The 'schedule' parameter is declared with [] as its default, so this is what
+	// an untouched node actually sends.
+	it('refuses to create a hook when no schedule was picked', async () => {
+		const ctx = createContext({ parameters: { events: 'N', schedule: [] } });
+
+		await expect(create.call(ctx as any)).rejects.toThrow(NodeOperationError);
+		expect(ctx.helpers.request).not.toHaveBeenCalled();
+	});
+
+	// Without this, delete() can never find the hook it is supposed to remove.
+	it('records the hook id and parent so delete can find them later', async () => {
+		const staticData: Record<string, unknown> = {};
+		const ctx = createContext({
+			parameters: { events: 'N', schedule: '42' },
+			staticData,
+			request: vi.fn().mockResolvedValue(JSON.stringify({ id: 123 })),
+		});
+
+		await create.call(ctx as any);
+
+		expect(staticData).toEqual({ webhookID: '123', webhookParentID: '42' });
+	});
+
+	it('does not record anything when creation failed', async () => {
+		const staticData: Record<string, unknown> = {};
+		const ctx = createContext({
+			parameters: { events: 'N', schedule: '42' },
+			staticData,
+			request: vi.fn().mockRejectedValue(new Error('boom')),
+		});
+
+		await expect(create.call(ctx as any)).rejects.toThrow();
+		expect(staticData).toEqual({});
 	});
 
 	it('swaps the localhost prefix for the tunnel URL when ngrok is configured', async () => {
@@ -275,15 +381,48 @@ describe('webhookMethods.default.delete', () => {
 		expect(staticData).toEqual({ webhookID: 'hook-7', webhookParentID: '42' });
 	});
 
-	// NOTE: this documents current behaviour, and it is a bug. `create` never writes
-	// webhookID/webhookParentID into the workflow's static data, so in a real workflow
-	// this branch is always the one taken and hooks are never removed from SuperSaaS.
-	// See the "known gap" note in the test suite README before changing this.
+	// Still the right behaviour for a hook that predates create() storing its id.
 	it('does nothing when no hook id was stored', async () => {
 		const ctx = createContext({ staticData: {} });
 
 		await expect(deleteHook.call(ctx as any)).resolves.toBe(false);
 		expect(ctx.helpers.request).not.toHaveBeenCalled();
+	});
+});
+
+describe('create then delete', () => {
+	let restoreConsole: () => void;
+
+	beforeEach(() => {
+		restoreConsole = silenceConsole();
+	});
+	afterEach(() => restoreConsole());
+
+	// The whole point of create() persisting the id: a hook registered on activation
+	// must actually be removed again on deactivation.
+	it('removes the hook that create registered', async () => {
+		const staticData: Record<string, unknown> = {};
+		const request = vi
+			.fn()
+			.mockResolvedValueOnce(JSON.stringify({ id: 123 }))
+			.mockResolvedValueOnce('');
+		const ctx = createContext({
+			parameters: { events: 'N', schedule: '42' },
+			staticData,
+			request,
+		});
+
+		await expect(create.call(ctx as any)).resolves.toBe(true);
+		await expect(deleteHook.call(ctx as any)).resolves.toBe(true);
+
+		expect(request).toHaveBeenNthCalledWith(
+			2,
+			expect.objectContaining({
+				method: 'DELETE',
+				body: { parent_id: '42', id: '123' },
+			}),
+		);
+		expect(staticData).toEqual({});
 	});
 });
 

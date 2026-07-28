@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { NodeApiError, NodeOperationError } from 'n8n-workflow';
-import { getAccount, superSaaSApiRequest } from '../nodes/SuperSaaS/GenericFunctions';
+import {
+	getAccount,
+	getRegisteredWebhookUrl,
+	superSaaSApiRequest,
+} from '../nodes/SuperSaaS/GenericFunctions';
 import { createContext } from './helpers';
 
 describe('getAccount', () => {
@@ -21,6 +25,49 @@ describe('getAccount', () => {
 		const ctx = createContext({ credentials: { api_key: 'secret-key' } });
 
 		await expect(getAccount.call(ctx as any)).rejects.toThrow(NodeOperationError);
+	});
+});
+
+describe('getRegisteredWebhookUrl', () => {
+	it('returns the n8n webhook URL unchanged when no tunnel is configured', async () => {
+		const ctx = createContext({ webhookUrl: 'http://localhost:5678/webhook/abc' });
+
+		await expect(getRegisteredWebhookUrl.call(ctx as any)).resolves.toBe(
+			'http://localhost:5678/webhook/abc',
+		);
+	});
+
+	it('swaps the localhost origin for the configured tunnel', async () => {
+		const ctx = createContext({
+			credentials: { account: 'acme', api_key: 'secret-key', ngrok: 'https://abc123.ngrok.io' },
+			webhookUrl: 'http://localhost:5678/webhook/abc',
+		});
+
+		await expect(getRegisteredWebhookUrl.call(ctx as any)).resolves.toBe(
+			'https://abc123.ngrok.io/webhook/abc',
+		);
+	});
+
+	it('leaves a non-localhost URL alone even with a tunnel configured', async () => {
+		const ctx = createContext({
+			credentials: { account: 'acme', api_key: 'secret-key', ngrok: 'https://abc123.ngrok.io' },
+			webhookUrl: 'https://n8n.example.test/webhook/abc',
+		});
+
+		await expect(getRegisteredWebhookUrl.call(ctx as any)).resolves.toBe(
+			'https://n8n.example.test/webhook/abc',
+		);
+	});
+
+	it('ignores an empty tunnel value', async () => {
+		const ctx = createContext({
+			credentials: { account: 'acme', api_key: 'secret-key', ngrok: '' },
+			webhookUrl: 'http://localhost:5678/webhook/abc',
+		});
+
+		await expect(getRegisteredWebhookUrl.call(ctx as any)).resolves.toBe(
+			'http://localhost:5678/webhook/abc',
+		);
 	});
 });
 

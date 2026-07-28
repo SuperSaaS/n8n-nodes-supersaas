@@ -9,7 +9,7 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 import { NodeConnectionTypes } from 'n8n-workflow';
-import {getAccount, superSaaSApiRequest} from './GenericFunctions';
+import {getAccount, getRegisteredWebhookUrl, superSaaSApiRequest} from './GenericFunctions';
 
 export class SuperSaaSTrigger implements INodeType {
 	description: INodeTypeDescription = {
@@ -124,7 +124,10 @@ export class SuperSaaSTrigger implements INodeType {
 					let responseJSON = JSON.parse(responseData)
 					for (const item of responseJSON) {
 						const itemName = item["name"] as string;
-						const itemID = item["id"] as string;
+						// The API returns numeric ids. `as string` would only silence the
+						// compiler; the value has to actually be converted, otherwise the
+						// number ends up as the parameter value and checkExists misses it.
+						const itemID = String(item["id"]);
 						optionsRet.push({
 							name: "Schedule: " + itemName,
 							value: itemID,
@@ -135,7 +138,7 @@ export class SuperSaaSTrigger implements INodeType {
 					let responseJSON = JSON.parse(responseData)
 					for (const item of responseJSON) {
 						const itemName = item["name"] as string;
-						const itemID = item["id"] as string;
+						const itemID = String(item["id"]);
 						optionsRet.push({
 							name: "Form: " + itemName,
 							value: itemID,
@@ -151,13 +154,13 @@ export class SuperSaaSTrigger implements INodeType {
 	webhookMethods = {
 		default: {
 			async checkExists(this: IHookFunctions): Promise<boolean> {
-				const webhookUrl = this.getNodeWebhookUrl('default');
+				const webhookUrl = await getRegisteredWebhookUrl.call(this);
 				const event = this.getNodeParameter('events') as string;
-				let parentID = this.getNodeParameter('schedule') as string;
+				const parentID = String(this.getNodeParameter('schedule'));
 				let responseData = await superSaaSApiRequest.call(this, 'GET', '/api/hooks');
 				let responseJSON = JSON.parse(responseData)
 				for (const webhook of responseJSON) {
-					if (webhook.url === webhookUrl && webhook.trigger === event && webhook.parent_id === parentID) {
+					if (webhook.url === webhookUrl && webhook.trigger === event && String(webhook.parent_id) === parentID) {
 						return true;
 					}
 				}
@@ -165,21 +168,20 @@ export class SuperSaaSTrigger implements INodeType {
 				return false;
 			},
 			async create(this: IHookFunctions): Promise<boolean> {
-				var webhookUrl = this.getNodeWebhookUrl('default');
 				const event = this.getNodeParameter('events') as string;
-				const parentId = this.getNodeParameter('schedule') as string;
+				// The 'schedule' parameter defaults to [], so convert before testing it:
+				// `[] as string` is truthy and would pass the guard below.
+				const parentId = String(this.getNodeParameter('schedule') ?? '');
 
 				// Validate parent ID
 				if (!parentId) {
 					throw new NodeOperationError(this.getNode(), 'Parent ID is required');
 				}
 
+				const webhookUrl = await getRegisteredWebhookUrl.call(this);
+
 				try {
 					const creds = await this.getCredentials('superSaaSApi')
-
-					if (creds.ngrok && (creds.ngrok as string).length > 0){
-						webhookUrl = webhookUrl?.replace("http://localhost:5678", creds.ngrok as string)
-					}
 
 					console.log('Creating webhook with:', {
 						webhookUrl,
@@ -202,6 +204,13 @@ export class SuperSaaSTrigger implements INodeType {
 					if (!response || !response.id) {
 						throw new Error('Invalid response from webhook creation');
 					}
+
+					// delete() reads these back to remove the hook again; without them the
+					// hook stays registered at SuperSaaS forever.
+					const webhookData = this.getWorkflowStaticData('node');
+					webhookData.webhookID = String(response.id);
+					webhookData.webhookParentID = parentId;
+
 					return true;
 				} catch (error) {
 					console.error('Failed to create webhook, check API key:', {

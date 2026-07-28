@@ -15,8 +15,8 @@ module level, so the assertions exercise the shipped logic rather than a stand-i
 
 | File | Covers |
 | --- | --- |
-| `GenericFunctions.test.ts` | `getAccount`, `superSaaSApiRequest` — credential validation, URL construction, request bodies per HTTP method, error wrapping |
-| `SuperSaaSTrigger.node.test.ts` | node description, `loadOptions.getSchedules`, `webhookMethods.default.{checkExists,create,delete}`, `webhook()` |
+| `GenericFunctions.test.ts` | `getAccount`, `getRegisteredWebhookUrl`, `superSaaSApiRequest` — credential validation, tunnel substitution, URL construction, request bodies per HTTP method, error wrapping |
+| `SuperSaaSTrigger.node.test.ts` | node description, `loadOptions.getSchedules`, `webhookMethods.default.{checkExists,create,delete}`, the create→delete round trip, `webhook()` |
 | `SuperSaaSApi.credentials.test.ts` | credential name, field list, api-key masking, `test` request shape |
 
 The description tests are deliberately specific about `outputs`. n8n-workflow turned
@@ -24,37 +24,19 @@ The description tests are deliberately specific about `outputs`. n8n-workflow tu
 value stopped compiling, and the assertion on `['main']` pins the emitted value so a
 future rename cannot silently change the node's output wiring.
 
-## Known gap: hooks are never deleted
+## String ids
 
-`webhookMethods.default.delete` early-returns `false` unless `webhookID` and
-`webhookParentID` are present in the workflow's static data. Nothing in this
-repository ever writes those keys — `create` returns `true` without recording the id
-it just received, and grep confirms the only other references are the `delete`
-statements at the end of the same method.
-
-In practice that means deactivating a workflow or removing the node leaves the hook
-registered at SuperSaaS. `checkExists` then finds the stale hook on reactivation, so
-it is not visible as a duplicate, but hooks accumulate on the account.
-
-`test/SuperSaaSTrigger.node.test.ts` documents this as
-`'does nothing when no hook id was stored'`. The other two `delete` tests inject the
-static data by hand and prove the removal path itself works — so the fix is
-presumably to have `create` persist the id:
-
-```ts
-const webhookData = this.getWorkflowStaticData('node');
-webhookData.webhookID = response.id;
-webhookData.webhookParentID = parentId;
-```
-
-That has not been applied here because it changes the webhook lifecycle and should be
-verified against the live SuperSaaS API first.
+Several tests feed **numeric** ids where the SuperSaaS API returns numbers
+(`/api/schedules.json`, `/api/super_forms.json`, `/api/hooks`). This is not
+incidental. `as string` is a compile-time assertion that emits no code, so casting a
+number that way leaves a number at runtime and a later `===` against a string fails
+silently. The node converts with `String(...)` at the boundaries instead, and these
+tests are what stop that regressing — a test feeding string ids cannot tell the two
+apart.
 
 ## Not covered
 
 - Real HTTP against `www.supersaas.com`; everything stops at `helpers.request`.
 - The node running inside n8n. Use `build.sh` (`npm run build && npm link`) for that.
-- `checkExists` compares `webhook.parent_id === parentID` with `===`. The tests feed
-  string ids on both sides; if the API returns numeric ids the comparison would fail
-  silently and hooks would be recreated on every activation. Worth confirming against
-  a real account response.
+- Whether SuperSaaS accepts the hook id `delete` sends back as a string. The round
+  trip is verified against a mock, not the live API.

@@ -1,10 +1,8 @@
 import { vi } from 'vitest';
 import type { INode } from 'n8n-workflow';
 
-/**
- * Minimal stand-in for the n8n node the error classes need. NodeApiError and
- * NodeOperationError both read from this, so it has to be shaped like a real one.
- */
+// NodeApiError and NodeOperationError both read from the node they are given, so
+// this has to be shaped like a real one.
 export const testNode: INode = {
 	id: 'test-node-id',
 	name: 'SuperSaaS Trigger',
@@ -21,25 +19,16 @@ export const validCredentials = {
 };
 
 export interface ContextOptions {
-	/** Credentials returned by getCredentials(). Pass null to simulate none. */
 	credentials?: Record<string, unknown> | null;
-	/** Node parameter values keyed by parameter name. */
 	parameters?: Record<string, unknown>;
-	/** Value returned by getNodeWebhookUrl(). */
 	webhookUrl?: string;
-	/** Backing object for getWorkflowStaticData('node'). */
 	staticData?: Record<string, unknown>;
-	/** Body returned by getBodyData(), used by the webhook() handler. */
 	bodyData?: unknown;
-	/** Implementation for this.helpers.request. Defaults to a resolved empty array. */
 	request?: (...args: any[]) => unknown;
 }
 
-/**
- * Builds a fake n8n execution context. The node code is always invoked via
- * `.call(context, ...)`, so a plain object with the members actually used is
- * enough — no need to satisfy the full IHookFunctions surface.
- */
+// The node code is always invoked via .call(context, ...), so a plain object with
+// the members actually used is enough — no need to satisfy all of IHookFunctions.
 export function createContext(options: ContextOptions = {}) {
 	const {
 		credentials = validCredentials,
@@ -66,13 +55,8 @@ export function createContext(options: ContextOptions = {}) {
 	};
 }
 
-/** Convenience type for the object createContext returns. */
 export type TestContext = ReturnType<typeof createContext>;
 
-/**
- * Silences the console.log/console.error calls the node makes during webhook
- * creation so test output stays readable. Returns a restore function.
- */
 export function silenceConsole() {
 	const log = vi.spyOn(console, 'log').mockImplementation(() => {});
 	const error = vi.spyOn(console, 'error').mockImplementation(() => {});

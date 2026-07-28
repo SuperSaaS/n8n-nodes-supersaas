@@ -8,7 +8,7 @@ import {
 	IWebhookResponseData,
 	NodeOperationError,
 } from 'n8n-workflow';
-import { NodeConnectionType } from 'n8n-workflow';
+import { NodeConnectionTypes } from 'n8n-workflow';
 import {getAccount, superSaaSApiRequest} from './GenericFunctions';
 
 export class SuperSaaSTrigger implements INodeType {
@@ -24,7 +24,7 @@ export class SuperSaaSTrigger implements INodeType {
 			name: 'SuperSaaS Trigger',
 		},
 		inputs: [],
-		outputs: [NodeConnectionType.Main],
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{
 				name: 'superSaaSApi',

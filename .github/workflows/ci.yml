@@ -17,14 +17,19 @@ jobs:
         node-version: ['20.19', '22', '24']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
 
-      - run: npm ci
+      # --ignore-scripts skips the native build of isolated-vm, pulled in via
+      # n8n-workflow -> @n8n/expression-runtime. It does not compile against the
+      # v8 headers of Node 20.19, and nothing here uses it: n8n-workflow is only
+      # needed for its types and error classes. Also keeps install scripts from
+      # third-party packages out of CI.
+      - run: npm ci --ignore-scripts
 
       - run: npm run lint
 

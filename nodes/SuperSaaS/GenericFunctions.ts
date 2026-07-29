@@ -8,6 +8,7 @@ import type {
 import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 import type { AxiosError } from 'axios';
 
+const LOCAL_WEBHOOK_ORIGIN = 'http://localhost:5678';
 
 export async function getAccount(this: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,): Promise<string> {
 	const credentials = await this.getCredentials('superSaaSApi');
@@ -16,6 +17,18 @@ export async function getAccount(this: IHookFunctions | IExecuteFunctions | ILoa
 	}
 
 	return credentials.account as string
+}
+
+export async function getRegisteredWebhookUrl(this: IHookFunctions): Promise<string | undefined> {
+	const webhookUrl = this.getNodeWebhookUrl('default');
+	const credentials = await this.getCredentials('superSaaSApi');
+	const tunnel = credentials?.ngrok as string | undefined;
+
+	if (tunnel && tunnel.length > 0 && webhookUrl?.startsWith(LOCAL_WEBHOOK_ORIGIN)) {
+		return tunnel + webhookUrl.slice(LOCAL_WEBHOOK_ORIGIN.length);
+	}
+
+	return webhookUrl;
 }
 
 interface RequestBody {

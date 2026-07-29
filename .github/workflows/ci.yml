@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Lower bound is the engines field.
+        node-version: ['20.19', '22', '24']
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      # Required: isolated-vm (via n8n-workflow) has no prebuilt binary and fails
+      # to compile on 20.19. Nothing here loads it.
+      - run: npm ci --ignore-scripts
+
+      - run: npm run lint
+
+      - run: npm run build
+
+      - run: npm test

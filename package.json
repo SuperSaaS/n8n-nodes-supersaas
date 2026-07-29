@@ -25,7 +25,9 @@
     "format": "prettier nodes credentials --write",
     "lint": "eslint nodes/**/*.ts credentials/**/*.ts",
     "lintfix": "eslint nodes/**/*.ts credentials/**/*.ts --fix",
-    "prepublishOnly": "npm run build && npm run lint"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm run lint && npm test"
   },
   "files": [
     "dist"
@@ -39,21 +41,27 @@
       "dist/nodes/SuperSaaS/SuperSaaSTrigger.node.js"
     ]
   },
+  "engines": {
+    "node": ">=20.19"
+  },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.2.0",
-    "@eslint/js": "^9.17.0",
-    "@typescript-eslint/eslint-plugin": "^8.18.1",
-    "@typescript-eslint/parser": "^8.18.1",
-    "eslint-plugin-n8n-nodes-base": "^1.16.3",
-    "globals": "^15.14.0",
+    "@typescript-eslint/eslint-plugin": "^8.65.0",
+    "@typescript-eslint/parser": "^8.65.0",
+    "axios": "^1.14.2",
+    "eslint": "^10.8.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.7",
     "gulp": "^5.0.0",
     "n8n-workflow": "^1.7.0",
     "prettier": "^3.4.2",
     "typescript": "^5.7.2",
-    "typescript-eslint": "8.15.0"
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^4.1.10"
   },
   "peerDependencies": {
     "n8n-workflow": "*"
+  },
+  "overrides": {
+    "form-data": "^4.0.6"
   },
   "eslintIgnore": [
     "node_modules",
@@ -64,11 +72,5 @@
     "npm-debug.log*",
     "yarn.lock",
     ".vscode/launch.json"
-  ],
-  "dependencies": {
-    "@eslint/config-array": "^0.19.1",
-    "@eslint/object-schema": "^2.1.5",
-    "eslint": "^9.17.0",
-    "form-data": "^4.0.4"
-  }
+  ]
 }

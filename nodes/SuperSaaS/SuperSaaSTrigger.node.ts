@@ -124,9 +124,6 @@ export class SuperSaaSTrigger implements INodeType {
 					let responseJSON = JSON.parse(responseData)
 					for (const item of responseJSON) {
 						const itemName = item["name"] as string;
-						// The API returns numeric ids. `as string` would only silence the
-						// compiler; the value has to actually be converted, otherwise the
-						// number ends up as the parameter value and checkExists misses it.
 						const itemID = String(item["id"]);
 						optionsRet.push({
 							name: "Schedule: " + itemName,
@@ -169,8 +166,6 @@ export class SuperSaaSTrigger implements INodeType {
 			},
 			async create(this: IHookFunctions): Promise<boolean> {
 				const event = this.getNodeParameter('events') as string;
-				// The 'schedule' parameter defaults to [], so convert before testing it:
-				// `[] as string` is truthy and would pass the guard below.
 				const parentId = String(this.getNodeParameter('schedule') ?? '');
 
 				// Validate parent ID
@@ -205,8 +200,6 @@ export class SuperSaaSTrigger implements INodeType {
 						throw new Error('Invalid response from webhook creation');
 					}
 
-					// delete() reads these back to remove the hook again; without them the
-					// hook stays registered at SuperSaaS forever.
 					const webhookData = this.getWorkflowStaticData('node');
 					webhookData.webhookID = String(response.id);
 					webhookData.webhookParentID = parentId;

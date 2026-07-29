@@ -9,8 +9,6 @@ const { checkExists, create, delete: deleteHook } = node.webhookMethods.default;
 
 describe('description', () => {
 	it('declares a single main output', () => {
-		// Guards the regression where NodeConnectionType was used as a value after
-		// n8n-workflow turned it into a type-only alias.
 		expect(node.description.outputs).toEqual([NodeConnectionTypes.Main]);
 		expect(node.description.outputs).toEqual(['main']);
 	});
@@ -90,9 +88,6 @@ describe('loadOptions.getSchedules', () => {
 		);
 	});
 
-	// The API returns numeric ids. These become the stored value of the 'schedule'
-	// parameter, which checkExists later compares against, so they have to be
-	// converted rather than just cast — `as string` leaves a number at runtime.
 	it('converts numeric schedule ids to strings', async () => {
 		const ctx = createContext({
 			parameters: { events: 'N' },
@@ -175,9 +170,6 @@ describe('webhookMethods.default.checkExists', () => {
 		await expect(checkExists.call(ctx as any)).resolves.toBe(false);
 	});
 
-	// The API returns parent_id as a number; the node parameter holds a string. A
-	// strict comparison of the two never matches, so every activation used to
-	// register another copy of the same hook.
 	it('matches a hook whose parent_id came back as a number', async () => {
 		const ctx = createContext({
 			parameters,
@@ -202,8 +194,6 @@ describe('webhookMethods.default.checkExists', () => {
 		await expect(checkExists.call(ctx as any)).resolves.toBe(false);
 	});
 
-	// create registers the tunnel URL, so checkExists has to look for that same URL
-	// rather than the raw localhost one.
 	it('looks for the tunnel URL when ngrok is configured', async () => {
 		const ctx = createContext({
 			credentials: { account: 'acme', api_key: 'secret-key', ngrok: 'https://abc123.ngrok.io' },
@@ -272,7 +262,6 @@ describe('webhookMethods.default.create', () => {
 		expect(ctx.helpers.request).not.toHaveBeenCalled();
 	});
 
-	// Without this, delete() can never find the hook it is supposed to remove.
 	it('records the hook id and parent so delete can find them later', async () => {
 		const staticData: Record<string, unknown> = {};
 		const ctx = createContext({
@@ -381,7 +370,6 @@ describe('webhookMethods.default.delete', () => {
 		expect(staticData).toEqual({ webhookID: 'hook-7', webhookParentID: '42' });
 	});
 
-	// Still the right behaviour for a hook that predates create() storing its id.
 	it('does nothing when no hook id was stored', async () => {
 		const ctx = createContext({ staticData: {} });
 
@@ -398,8 +386,6 @@ describe('create then delete', () => {
 	});
 	afterEach(() => restoreConsole());
 
-	// The whole point of create() persisting the id: a hook registered on activation
-	// must actually be removed again on deactivation.
 	it('removes the hook that create registered', async () => {
 		const staticData: Record<string, unknown> = {};
 		const request = vi

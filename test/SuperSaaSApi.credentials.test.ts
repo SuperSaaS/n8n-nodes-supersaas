@@ -5,8 +5,6 @@ const credentials = new SuperSaaSApi();
 
 describe('SuperSaaSApi credentials', () => {
 	it('uses the name the node refers to', () => {
-		// GenericFunctions and the trigger both call getCredentials('superSaaSApi'),
-		// so this name is part of the contract between the two files.
 		expect(credentials.name).toBe('superSaaSApi');
 		expect(credentials.displayName).toBe('SuperSaaS API');
 	});

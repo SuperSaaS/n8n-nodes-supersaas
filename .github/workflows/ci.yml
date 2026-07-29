@@ -12,8 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Lower bound is the engines field; 22 and 24 are the other versions
-        # eslint 10 and brace-expansion 5 support.
+        # Lower bound is the engines field.
         node-version: ['20.19', '22', '24']
 
     steps:
@@ -24,11 +23,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
 
-      # --ignore-scripts skips the native build of isolated-vm, pulled in via
-      # n8n-workflow -> @n8n/expression-runtime. It does not compile against the
-      # v8 headers of Node 20.19, and nothing here uses it: n8n-workflow is only
-      # needed for its types and error classes. Also keeps install scripts from
-      # third-party packages out of CI.
+      # Required: isolated-vm (via n8n-workflow) has no prebuilt binary and fails
+      # to compile on 20.19. Nothing here loads it.
       - run: npm ci --ignore-scripts
 
       - run: npm run lint

@@ -24,8 +24,8 @@ export async function getRegisteredWebhookUrl(this: IHookFunctions): Promise<str
 	const credentials = await this.getCredentials('superSaaSApi');
 	const tunnel = credentials?.ngrok as string | undefined;
 
-	if (tunnel && tunnel.length > 0) {
-		return webhookUrl?.replace(LOCAL_WEBHOOK_ORIGIN, tunnel);
+	if (tunnel && tunnel.length > 0 && webhookUrl?.startsWith(LOCAL_WEBHOOK_ORIGIN)) {
+		return tunnel + webhookUrl.slice(LOCAL_WEBHOOK_ORIGIN.length);
 	}
 
 	return webhookUrl;

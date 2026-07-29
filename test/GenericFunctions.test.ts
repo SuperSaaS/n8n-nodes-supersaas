@@ -59,6 +59,17 @@ describe('getRegisteredWebhookUrl', () => {
 		);
 	});
 
+	it('only substitutes at the start of the URL', async () => {
+		const ctx = createContext({
+			credentials: { account: 'acme', api_key: 'secret-key', ngrok: 'https://abc123.ngrok.io' },
+			webhookUrl: 'https://n8n.example.test/webhook/http://localhost:5678/abc',
+		});
+
+		await expect(getRegisteredWebhookUrl.call(ctx as any)).resolves.toBe(
+			'https://n8n.example.test/webhook/http://localhost:5678/abc',
+		);
+	});
+
 	it('ignores an empty tunnel value', async () => {
 		const ctx = createContext({
 			credentials: { account: 'acme', api_key: 'secret-key', ngrok: '' },

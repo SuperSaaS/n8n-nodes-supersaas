@@ -1,5 +1,7 @@
 # n8n-nodes-supersaas
 
+[![CI](https://github.com/SuperSaaS/n8n-nodes-supersaas/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/SuperSaaS/n8n-nodes-supersaas/actions/workflows/ci.yml)
+
 This is an n8n community node. It lets you use SuperSaaS webhooks in your n8n workflows. It creates webhooks in the SuperSaaS backend, and then you can receive information you desire.
 
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.

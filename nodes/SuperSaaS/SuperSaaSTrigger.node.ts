@@ -128,8 +128,8 @@ export class SuperSaaSTrigger implements INodeType {
 						optionsRet.push({
 							name: "Schedule: " + itemName,
 							value: itemID,
-						}
-					);}
+						});
+					}
 				} else if (event === 'S' || event === 'O') {
 					let responseData = await superSaaSApiRequest.call(this, 'GET', '/api/super_forms.json');
 					let responseJSON = JSON.parse(responseData)
@@ -139,8 +139,8 @@ export class SuperSaaSTrigger implements INodeType {
 						optionsRet.push({
 							name: "Form: " + itemName,
 							value: itemID,
-						}
-					);}
+						});
+					}
 				}
 
 				return optionsRet;

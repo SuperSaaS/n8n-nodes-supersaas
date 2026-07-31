@@ -1,0 +1,37 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # These have to move as one. minimatch, and through it brace-expansion, is
+      # only reachable by upgrading every eslint consumer at the same time; a PR
+      # bumping one of them in isolation cannot resolve the tree.
+      eslint:
+        patterns:
+          - eslint
+          - '@eslint/*'
+          - '@typescript-eslint/*'
+          - typescript-eslint
+          - 'eslint-plugin-*'
+      dev-dependencies:
+        patterns:
+          - '*'
+        exclude-patterns:
+          - eslint
+          - '@eslint/*'
+          - '@typescript-eslint/*'
+          - typescript-eslint
+          - 'eslint-plugin-*'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - '*'

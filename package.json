@@ -20,7 +20,7 @@
   },
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc && gulp build:icons",
+    "build": "tsc && node scripts/copy-icons.js",
     "dev": "tsc --watch",
     "format": "prettier nodes credentials --write",
     "lint": "eslint nodes/**/*.ts credentials/**/*.ts",
@@ -45,17 +45,16 @@
     "node": ">=20.19"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.65.0",
-    "@typescript-eslint/parser": "^8.65.0",
-    "axios": "^1.14.2",
-    "eslint": "^10.8.0",
-    "eslint-plugin-n8n-nodes-base": "^1.16.7",
-    "gulp": "^5.0.0",
-    "n8n-workflow": "^1.7.0",
-    "prettier": "^3.4.2",
-    "typescript": "^5.7.2",
-    "typescript-eslint": "^8.65.0",
-    "vitest": "^4.1.10"
+    "@typescript-eslint/eslint-plugin": "^8.67.0",
+    "@typescript-eslint/parser": "^8.67.0",
+    "axios": "^1.20.0",
+    "eslint": "^10.8.1",
+    "eslint-plugin-n8n-nodes-base": "^2.0.0",
+    "n8n-workflow": "~2.44.2",
+    "prettier": "^3.9.7",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.67.0",
+    "vitest": "^4.1.12"
   },
   "peerDependencies": {
     "n8n-workflow": "*"
